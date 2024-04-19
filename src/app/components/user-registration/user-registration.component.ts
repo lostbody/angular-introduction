@@ -8,6 +8,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormField, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { User } from 'src/app/shared/interfaces/user';
 import { UserService } from 'src/app/shared/services/user.service';
 
 @Component({
@@ -24,6 +25,11 @@ import { UserService } from 'src/app/shared/services/user.service';
 })
 export class UserRegistrationComponent {
   userService = inject(UserService);
+
+  registrationStatus: { success: boolean; message: string } = {
+    success: false,
+    message: 'Not attempted yet',
+  };
 
   form = new FormGroup(
     {
@@ -48,5 +54,32 @@ export class UserRegistrationComponent {
       return { passwordMismatch: true };
     }
     return {};
+  }
+
+  onSubmit(value: any) {
+    console.log(value);
+
+    const user = this.form.value as User;
+    delete user['confirmPassword'];
+
+    this.userService.registerUser(user).subscribe({
+      next: (response) => {
+        console.log('User registered', response.msg);
+        this.registrationStatus = { success: true, message: response.msg };
+      },
+      error: (response) => {
+        const message = response.error.msg;
+        console.log('Error registering user', message);
+        this.registrationStatus = { success: false, message };
+      },
+    });
+  }
+
+  registerAnotherUser() {
+    this.form.reset();
+    this.registrationStatus = {
+      success: false,
+      message: 'Not attempted yet',
+    };
   }
 }
